@@ -1,14 +1,14 @@
 <div class="mdc-card" style="margin-top: 10px;">
     <div class="mdc-card__content">
-        <h1>Name: placeholder name</h1>
-        <p>Lorem ipsum</p>
-        <p>Status: 0</p>
-        <p>Signatures required: 5</p>
-        <p>Added by: Admin</p>
+        <h1>Name: {{product.name}}</h1>
+        <p>{{product.description}}</p>
+        <p>Status: {{product.status}}</p>
+        <p>Signatures required: {{product.maxStage}}</p>
+        <p>Added by: {{product.createdBy}}</p>
         <div class="mdf-card__title">Signatures:</div>
         <ul>
-            <li>Stage: 0</li>
-            <li>Signed By: Admin</li>
+            <li>Stage: {{product.status}}</li>
+            <li>Signed By: {{product.createdBy}}</li>
         </ul>
     </div>
     <div class="mdc-card__line"></div>
@@ -19,22 +19,23 @@
                     <i class="mdc-select__dropdown-icon"></i>
                     <select class="mdc-select__native-control" name="identity">
                         <option value="" disabled selected></option>
-                            <option value="Admin">Admin</option>
+                            {{#each users}}
+                            <option value="{{label}}">{{label}}</option>
+                            {{/each}}
                     </select>
                     <label class="mdc-floating-label">Pick a User</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
-            
+
             <div class="mdc-form-group">
                 <button class="mdc-button mdc-button--raised" type="submit">
                     <span class="mdc-button__label">Sign</span>
                 </button>
             </div>
-            
+
         </form>
    </div>
 </div>
-
 
 <a href="/">Back</a>
