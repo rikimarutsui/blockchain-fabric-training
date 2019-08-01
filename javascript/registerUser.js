@@ -60,6 +60,10 @@ async function main() {
                 attrs.push({name: "canCreate", value: "true", ecert: false});
                 attr_reqs.push({name: "canCreate", optional: true});
                 break;
+            case "manager":
+		attrs.push({name: "canSign", value: args[2], ecert: false});
+                attr_reqs.push({name: "canSign", optional: true});
+		break;
             default:
                 console.error("Unexpected role");
                 process.exit(1);
