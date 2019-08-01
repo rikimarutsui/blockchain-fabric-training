@@ -36,7 +36,7 @@ import (
 	"math/big"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	// "github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
+	"github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
 	sc "github.com/hyperledger/fabric/protos/peer"
 )
 
@@ -118,7 +118,31 @@ func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Respo
 }
 
 func (s *SmartContract) createProduct(APIstub shim.ChaincodeStubInterface, args[] string) sc.Response{
-	return shim.Success(nil)
+	canCreate, found , _ := cid.GetAttributeValue(APIstub, "canCreate")
+	if(!found){
+		return shim.Error("User does not have the right to perform the action")
+	}
+	if(canCreate != "true"){
+		return shim.Error("User does not have the right to perform the action")
+	}
+	if(len(args) != 3){
+		return shim.Error("Incorrect number of arguments. Expecting 3 ")
+	}
+
+	username, found, _ := cid.GetAttributeValue(APIstub, "username")
+	var product = Product{Name: args[0], Description: args[1], Stage: "0", CreatedBy: username, MaxStage: args[2], Completed:  false}
+  productIdAsBytes, _ := APIstub.GetState("MaxProductId")
+  productId := new(big.Int).SetBytes(productIdAsBytes)
+	productIdAsString := productId.String();
+
+	productAsBytes, _ := json.Marshal(product)
+	APIstub.PutState(productIdAsString, productAsBytes)
+
+	increment := new(big.Int).SetInt64(1)
+	newProductId := new(big.Int).Add(productId, increment)
+	APIstub.PutState("MaxProductId", newProductId.Bytes())
+
+	return shim.Success(productAsBytes)
 }
 
 func (s *SmartContract) signProduct(APIstub shim.ChaincodeStubInterface, args[] string) sc.Response {
