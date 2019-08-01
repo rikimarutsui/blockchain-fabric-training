@@ -29,7 +29,7 @@ package main
  * 2 specific Hyperledger Fabric specific libraries for Smart Contracts
  */
 import (
-	// "bytes"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	// "strconv"
@@ -150,7 +150,16 @@ func (s *SmartContract) signProduct(APIstub shim.ChaincodeStubInterface, args[] 
 }
 
 func (s *SmartContract) queryAllProducts(APIstub shim.ChaincodeStubInterface) sc.Response {
-	return shim.Success(nil)
+  // The stupid method but fast
+	resultsIterator, err := APIstub.GetStateByRange("0", "99999999")
+	if(err != nil){
+		return shim.Error(err.Error())
+	}
+	var buffer bytes.Buffer
+	buffer = buildJSON(resultsIterator, buffer)    // cast to JSON format for frontend display
+	fmt.Print("- queryAllProducts:\n%s\n", buffer.String())
+
+	return shim.Success(buffer.Bytes())
 }
 
 func (s *SmartContract) getMaxProductId(APIstub shim.ChaincodeStubInterface) sc.Response {
@@ -164,6 +173,31 @@ func (s *SmartContract) getIncompleteProducts(APIstub shim.ChaincodeStubInterfac
 func (s *SmartContract) searchProducts(APIstub shim.ChaincodeStubInterface, args[] string) sc.Response{
 	return shim.Success(nil)
 }
+
+func buildJSON(resultsIterator shim.StateQueryIteratorInterface, buffer bytes.Buffer) bytes.Buffer{
+	buffer.WriteString("[")
+	bArrayMemberAlreadyWritten := false
+	for resultsIterator.HasNext() {
+		queryResponse, _ := resultsIterator.Next()
+		if (bArrayMemberAlreadyWritten == true){
+			buffer.WriteString(",")
+		}
+		buffer.WriteString("{\"ProductId\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(queryResponse.Key)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Record\":")
+		// Record is a JSON object, so we write as-is
+		buffer.WriteString(string(queryResponse.Value))
+		buffer.WriteString("}")
+		bArrayMemberAlreadyWritten = true
+	}
+
+	buffer.WriteString("]")
+	return buffer
+}
+
 // The main function is only relevant in unit test mode. Only included here for completeness.
 func main() {
 
