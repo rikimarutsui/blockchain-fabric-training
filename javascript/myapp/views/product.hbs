@@ -4,13 +4,20 @@
         <p>{{product.description}}</p>
         <p>Status: {{product.status}}</p>
         <p>Signatures required: {{product.maxStage}}</p>
-        <p>Added by: {{product.createdBy}}</p>
-        <div class="mdf-card__title">Signatures:</div>
-        <ul>
-            <li>Stage: {{product.status}}</li>
-            <li>Signed By: {{product.createdBy}}</li>
-        </ul>
+        {{#if product.createdBy}}
+          <p>Added by: {{product.createdBy}}</p>
+        {{/if}}
+        {{#if product.signatures}}
+          <div class="mdf-card__title">Signatures:</div>
+          {{#each product.signatures}}
+          <ul>
+              <li>Stage: {{status}}</li>
+              <li>Signed By: {{name}}</li>
+          </ul>
+          {{/each}}
+        {{/if}}
     </div>
+    {{#unless product.completed}}
     <div class="mdc-card__line"></div>
     <div class="mdc-card__actions">
         <form method="post">
@@ -33,9 +40,9 @@
                     <span class="mdc-button__label">Sign</span>
                 </button>
             </div>
-
         </form>
    </div>
+   {{/unless}}
 </div>
 
 <a href="/">Back</a>

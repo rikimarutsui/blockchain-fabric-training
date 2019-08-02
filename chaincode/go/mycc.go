@@ -32,7 +32,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	// "strconv"
+	"strconv"
 	"math/big"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -133,7 +133,7 @@ func (s *SmartContract) createProduct(APIstub shim.ChaincodeStubInterface, args[
 	var product = Product{Name: args[0], Description: args[1], Stage: "0", CreatedBy: username, MaxStage: args[2], Completed:  false}
   productIdAsBytes, _ := APIstub.GetState("MaxProductId")
   productId := new(big.Int).SetBytes(productIdAsBytes)
-	productIdAsString := productId.String();
+	productIdAsString := productId.String()
 
 	productAsBytes, _ := json.Marshal(product)
 	APIstub.PutState(productIdAsString, productAsBytes)
@@ -146,7 +146,51 @@ func (s *SmartContract) createProduct(APIstub shim.ChaincodeStubInterface, args[
 }
 
 func (s *SmartContract) signProduct(APIstub shim.ChaincodeStubInterface, args[] string) sc.Response {
-	return shim.Success(nil)
+		if (len(args) != 1){
+			return shim.Error("Incorrect number of arguments. Expecting 1")
+		}
+
+		productAsBytes, err := APIstub.GetState(args[0])
+
+		if (err!=nil){
+			return shim.Error("Error while retrieving product")
+		}
+
+		product := Product{}
+		username, _, _ := cid.GetAttributeValue(APIstub, "username")
+		json.Unmarshal(productAsBytes, &product)
+
+
+		canSignStageAsBytes, found, _ := cid.GetAttributeValue(APIstub, "canSign")
+		if (!found){
+			return shim.Error("User cannot sign product")
+		}
+
+		if (product.Stage == product.MaxStage){
+			return shim.Error("Cannot be signed.")
+		}
+		canSignStage, _ := strconv.Atoi(canSignStageAsBytes)
+		currentStage, _ := strconv.Atoi(product.Stage)
+
+		if (canSignStage <= currentStage){
+			return shim.Error("User does not have rights to sign.")
+		}
+
+		product.Stage = strconv.Itoa(currentStage+1)
+		if (product.Signatures == nil){
+			product.Signatures = []Signature{}
+		}
+
+		if product.Stage == product.MaxStage {
+			product.Completed = true
+		}
+		var signature = Signature{Name: username, Stage: strconv.Itoa(currentStage)}
+		product.Signatures = append(product.Signatures, signature)
+
+		productAsBytes, _ = json.Marshal(product)
+		APIstub.PutState(args[0], productAsBytes)
+
+		return shim.Success(productAsBytes)
 }
 
 func (s *SmartContract) queryAllProducts(APIstub shim.ChaincodeStubInterface) sc.Response {
@@ -162,16 +206,27 @@ func (s *SmartContract) queryAllProducts(APIstub shim.ChaincodeStubInterface) sc
 	return shim.Success(buffer.Bytes())
 }
 
+func (s *SmartContract) searchProducts(APIstub shim.ChaincodeStubInterface, args[] string) sc.Response{
+
+	return shim.Success(nil)
+}
+
 func (s *SmartContract) getMaxProductId(APIstub shim.ChaincodeStubInterface) sc.Response {
 	return shim.Success(nil)
 }
 
 func (s *SmartContract) getIncompleteProducts(APIstub shim.ChaincodeStubInterface) sc.Response{
-	return shim.Success(nil)
-}
+	var query string
+	query = "{\"selector\":{\"completed\": false}}"
+	resultIterator, err := APIstub.GetQueryResult(query)
+	if(err != nil){
+		return shim.Success(nil)
+	}
 
-func (s *SmartContract) searchProducts(APIstub shim.ChaincodeStubInterface, args[] string) sc.Response{
-	return shim.Success(nil)
+	var buffer bytes.Buffer
+	buffer = buildJSON(resultIterator, buffer)
+	fmt.Printf("- queryIncompletedProducts:\n%s\n", buffer.String())
+	return shim.Success(buffer.Bytes())
 }
 
 func buildJSON(resultsIterator shim.StateQueryIteratorInterface, buffer bytes.Buffer) bytes.Buffer{
