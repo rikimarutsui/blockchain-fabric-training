@@ -207,8 +207,17 @@ func (s *SmartContract) queryAllProducts(APIstub shim.ChaincodeStubInterface) sc
 }
 
 func (s *SmartContract) searchProducts(APIstub shim.ChaincodeStubInterface, args[] string) sc.Response{
+	query := fmt.Sprintf("{\"selector\":{\"name\":{\"$regex\":\"^" + args[0] + "\"}}}", args[0])
+	resultIterator, err := APIstub.GetQueryResult(query)
 
-	return shim.Success(nil)
+	if(err != nil){
+		return shim.Success(nil)
+	}
+
+	var buffer bytes.Buffer
+	buffer = buildJSON(resultIterator, buffer)
+	fmt.Printf("- queryIncompletedProducts:\n%s\n", buffer.String())
+	return shim.Success(buffer.Bytes())
 }
 
 func (s *SmartContract) getMaxProductId(APIstub shim.ChaincodeStubInterface) sc.Response {
