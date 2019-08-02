@@ -28,19 +28,21 @@
             <i class="mdc-select__dropdown-icon"></i>
             <select class="mdc-select__native-control" name="identity">
                 <option value="" disabled selected></option>
-                <option value="Admin">Admin</option>
+                {{#each users}}
+                <option value="{{label}}">{{label}}</option>
+                {{/each}}
             </select>
             <label class="mdc-floating-label">Pick a User</label>
             <div class="mdc-line-ripple"></div>
         </div>
     </div>
-    
+
     <div class="mdc-form-group">
         <button class="mdc-button mdc-button--raised" type="submit">
             <span class="mdc-button__label">Create</span>
         </button>
     </div>
-    
+
 </form>
 
 <a href="/">Back</a>
