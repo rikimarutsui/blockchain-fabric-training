@@ -61,12 +61,12 @@ router.post('/:productId', function(req, res, next) {
       var product = client.invoke(identity, "signProduct", [req.params.productId]);
       resolve(product);
     }catch(error){
-      reject()
+      reject(error)
     }
   })
 
   request.then(product => {
-    res.redirect('/product/${req.params.productId}')
+    res.redirect(`/products/${req.params.productId}`)
   }, (error) => {
     console.log("Error", error);
     res.render('error', {error:error})

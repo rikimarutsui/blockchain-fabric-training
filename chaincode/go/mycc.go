@@ -207,7 +207,14 @@ func (s *SmartContract) queryAllProducts(APIstub shim.ChaincodeStubInterface) sc
 }
 
 func (s *SmartContract) searchProducts(APIstub shim.ChaincodeStubInterface, args[] string) sc.Response{
-	query := fmt.Sprintf("{\"selector\":{\"name\":{\"$regex\":\"^" + args[0] + "\"}}}", args[0])
+var query string
+	query = fmt.Sprintf("{\"selector\":{\"name\":{\"$regex\":\"(?i)^.*?%s.*?$\"}}}", args[0])
+																										// (?i) not case sentensive
+																										// ^ start point
+																										// .*? all type string
+																										// %s is args[0]
+	// or (to be continue)
+
 	resultIterator, err := APIstub.GetQueryResult(query)
 
 	if(err != nil){
